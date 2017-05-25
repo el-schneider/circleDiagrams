@@ -1,0 +1,249 @@
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import de.looksgood.ani.*; 
+import de.looksgood.ani.easing.*; 
+import java.io.FilenameFilter; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class pieDiagrams extends PApplet {
+
+
+
+
+
+static final FilenameFilter CSV_FILTER = new FilenameFilter() {
+  final String[] EXTS = {
+    "csv"
+  };
+
+  public @Override final boolean accept(final File dir, String name) {
+    name = name.toLowerCase();
+    for (final String ext: EXTS)  if (name.endsWith(ext))  return true;
+    return false;
+  }
+};
+
+int cols = 12;
+int rows = 4;
+Table table;
+
+float gridX;
+float gridY;
+
+float maxR;
+float maxValue;
+
+float smallText;
+float bigText;
+
+String[] tables;
+int tableIndex;
+
+int refreshFrame = 300;
+
+PFont font;
+
+ArrayList<DiagramItem> items;
+
+public void setup () {
+  
+  //size(1920,800);
+
+  Ani.init(this);
+  Ani.setDefaultTimeMode(Ani.FRAMES);
+
+  // we'll have a look in the data folder
+  java.io.File folder = new java.io.File(dataPath(""));
+
+  // add all CSV-type files to the tables array
+  tables = folder.list(CSV_FILTER);
+
+  gridX = 0.75f*width/cols;
+  gridY = height/rows;
+
+  maxR = (height/4) * .9f;
+
+  smallText = height/37;
+  bigText = height/20;
+
+  font = createFont("DINPro-Medium", smallText);
+  textFont(font);
+
+  tableIndex = 0;
+
+  initTable(tableIndex);
+}
+
+public void draw() {
+  translate(0.125f*width, gridY/2);
+
+  background(255);
+
+  if(frameCount % refreshFrame == 0){
+    switchTable();
+  }
+
+  for(DiagramItem i : items) {
+    i.displayCircles();
+  }
+
+  textAlign(LEFT, TOP);
+  textSize(height/10);
+
+  String title = table.getColumnTitle(table.getColumnCount() - 1);
+  text(title, 20, -height/10, width, gridY);
+}
+
+public void initTable(int tabI){
+  try {
+    table = loadTable(tables[tabI], "header");
+    fillArrayList(table, items);
+  }
+  catch(Exception e) {
+    println("table not there");
+  }
+
+  for(DiagramItem i : items) {
+    i.animIn(20);
+  }
+}
+
+public void switchTable() {
+  if (tableIndex < tables.length - 1){
+    tableIndex++;
+  }else{
+    tableIndex=0;
+  }
+
+  initTable(tableIndex);
+}
+
+public void mouseClicked(){
+  switchTable();
+
+}
+
+public void fillArrayList(Table tab,ArrayList<DiagramItem> its){
+  tab.setColumnType(1, "int");
+
+  //sort by value
+  tab.sort(1);
+  maxValue = tab.getInt(tab.getRowCount() - 1, "students");
+
+  //sort alphabetically
+  tab.sort(0);
+
+  its = new ArrayList<DiagramItem>();
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      int index = j + i * cols;
+
+      if (index < table.getRowCount()) {
+        float x = j*gridX;
+        float y = i*gridY;
+        TableRow row = table.getRow(index);
+        float r = map(row.getInt(1), 0, maxValue, 0, maxR);
+        int c = pickColorFromArray(colorPalette);
+
+        its.add(new DiagramItem(row, x, y, c, r));
+      }
+    }
+  }
+
+  items = its;
+}
+
+public int pickColorFromArray (int[] ca) {
+  int r = floor(random(0, ca.length));
+  return ca[r];
+}
+
+//colors
+int blue = 0xff1356A5;
+int yellow = 0xfff7ef00;
+int orange = 0xfff79307;
+int red = 0xffdf4c37;
+int pink = 0xffeb619a;
+int purple = 0xff8e84b4;
+int[] colorPalette = { yellow, orange, red, pink, purple };
+class DiagramItem{
+  TableRow row;
+
+  float x;
+  float y;
+
+  int c;
+
+  float r;
+
+  String strKey;
+  int val;
+
+  DiagramItem(TableRow row_, float x_, float y_, int c_, float r_){
+    row = row_;
+
+    x = x_;
+    y = y_;
+
+    c = c_;
+
+    r = r_;
+
+    strKey = row.getString(0).toUpperCase();
+    val = row.getInt(1);
+  }
+
+  public void displayCircles() {
+    noStroke();
+    fill(c);
+    ellipse(x + 0.5f*gridX, y +0.5f*gridY, r, r);
+
+    textAlign(CENTER, CENTER);
+
+    fill(0);
+    textSize(bigText);
+    text(str(val), x, y, gridX, gridY);
+
+    textAlign(CENTER, TOP);
+    textSize(smallText);
+    text(strKey, x, y + gridY - height/30, gridX, gridY);
+  }
+
+  public void animIn(int dur){
+    animInValues(dur);
+    animInCircles(dur*4);
+  }
+
+  public void animInValues(int dur){
+    float value = val;
+    val = 0;
+    Ani.to(this, dur, random(0, 12), "val", value, Ani.LINEAR);
+  }
+
+  public void animInCircles(int dur){
+    float rad = r;
+    r = 0;
+    Ani.to(this, dur, random(0, 12), "r", rad, Ani.ELASTIC_OUT);
+  }
+}
+  public void settings() {  size(1280, 400); }
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "pieDiagrams" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
+}
