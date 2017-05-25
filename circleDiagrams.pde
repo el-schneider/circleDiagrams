@@ -2,11 +2,14 @@ import de.looksgood.ani.*;
 import de.looksgood.ani.easing.*;
 import java.io.FilenameFilter;
 import spout.*;
+import processing.video.*;
 
 //spout object
 Spout spout;
 //spout senderName
 String sendername;
+
+Movie transition;
 
 int cols = 12;
 int rows = 4;
@@ -18,13 +21,15 @@ float gridY;
 float maxR;
 float maxValue;
 
+String title;
+float titleFactor;
 float smallText;
 float bigText;
 
 String[] tables;
 int tableIndex;
 
-int refreshFrame = 300;
+int refreshFrame = 400;
 
 PFont bigFont;
 PFont smallFont;
@@ -41,6 +46,8 @@ void setup () {
   Ani.init(this);
   Ani.setDefaultTimeMode(Ani.FRAMES);
 
+  transition = new Movie(this, "arrow-field.mov");
+  transition.stop();
 
   spout = new Spout(this);
   sendername = "circleDiagrams";
@@ -60,7 +67,7 @@ void setup () {
   //create font at high resolution so it sizes better
   smallFont = createFont("DINPro-Medium", height/37);
   bigFont = createFont("DINPro-Medium", height/20);
-  titleFont = createFont("DINPro-Medium", height/20);
+  titleFont = createFont("DINPro-Medium", height/10);
   textFont(bigFont);
 
   tableIndex = 0;
@@ -69,8 +76,8 @@ void setup () {
 }
 
 void draw() {
+  pushMatrix();
   translate(0.125*width, gridY/2);
-
   background(255);
 
   if(frameCount % refreshFrame == 0){
@@ -81,10 +88,22 @@ void draw() {
     i.displayCircles();
   }
 
-  String title = table.getColumnTitle(table.getColumnCount() - 1);
-  textAlign(LEFT, TOP);
-  textFont(titleFont);
-  text(title, 20, -height/10, width, gridY);
+
+  drawTitle();
+
+  popMatrix();
+
+
+  //make transition only show when playing
+  if(transition.time() > 0){
+    blendMode(MULTIPLY);
+    image(transition, 0, 0,width, height);
+
+    if (transition.time() == transition.duration()){
+      transition.stop();
+      transition.jump(0);
+    }
+  }
 
   spout.sendTexture();
   fill(255,0,0);
@@ -92,10 +111,50 @@ void draw() {
   text(frameRate,10,10);
 }
 
+void drawTitle(){
+  float uPosA = 0;
+  float uPosB = 0;
+  String tempTitle = title;
+
+  textAlign(LEFT, TOP);
+  textFont(titleFont);
+
+  int a = tempTitle.indexOf("<u>");
+  if(a > -1){
+    tempTitle = tempTitle.replaceAll("<u>","");
+
+    String subA = tempTitle.substring(0, a);
+    println(subA);
+    uPosA = textWidth(subA);
+  }
+
+  int b = tempTitle.indexOf("</u>");
+  if(b > -1){
+    tempTitle = tempTitle.replaceAll("</u>","");
+
+    String subB = tempTitle.substring(a,b);
+    uPosB = textWidth(subB);
+
+  }
+  float space = textWidth("  ");
+
+  text(tempTitle, 20, -height/10, width, gridY);
+
+  strokeWeight(5);
+  strokeCap(SQUARE);
+  stroke(0);
+  line(uPosA + space, 0, uPosA + ((uPosB + space) * titleFactor), 0);
+}
+
+void movieEvent(Movie m) {
+  m.read();
+}
+
 void initTable(int tabI){
   try {
     table = loadTable(tables[tabI], "header");
     fillArrayList(table, items);
+    title = table.getColumnTitle(table.getColumnCount() - 1);
   }
   catch(Exception e) {
     println("table not there");
@@ -104,9 +163,16 @@ void initTable(int tabI){
   for(DiagramItem i : items) {
     i.animIn(20);
   }
+
+  //animate title underline
+  titleFactor = 0;
+  Ani.to(this, 20, "titleFactor", 1, Ani.QUAD_OUT);
+
+  transition.play();
 }
 
 void switchTable() {
+
   if (tableIndex < tables.length - 1){
     tableIndex++;
   }else{
