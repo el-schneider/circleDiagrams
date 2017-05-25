@@ -26,14 +26,16 @@ int tableIndex;
 
 int refreshFrame = 300;
 
-PFont font;
+PFont bigFont;
+PFont smallFont;
+PFont titleFont;
 
 ArrayList<DiagramItem> items;
 
 void setup () {
   size(1280, 400,P2D);
   // size(1920,800,P2D);
-  textMode(SHAPE);
+  textMode(MODEL);
   smooth();
 
   Ani.init(this);
@@ -55,11 +57,11 @@ void setup () {
 
   maxR = (height/4) * .9;
 
-  smallText = height/37;
-  bigText = height/20;
-
-  font = createFont("DINPro-Medium", smallText);
-  textFont(font);
+  //create font at high resolution so it sizes better
+  smallFont = createFont("DINPro-Medium", height/37);
+  bigFont = createFont("DINPro-Medium", height/20);
+  titleFont = createFont("DINPro-Medium", height/20);
+  textFont(bigFont);
 
   tableIndex = 0;
 
@@ -79,13 +81,14 @@ void draw() {
     i.displayCircles();
   }
 
-  textAlign(LEFT, TOP);
-  textSize(height/10);
-
   String title = table.getColumnTitle(table.getColumnCount() - 1);
+  textAlign(LEFT, TOP);
+  textFont(titleFont);
   text(title, 20, -height/10, width, gridY);
 
   spout.sendTexture();
+  fill(255,0,0);
+  textSize(12);
   text(frameRate,10,10);
 }
 

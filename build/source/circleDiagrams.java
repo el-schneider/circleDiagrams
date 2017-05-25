@@ -47,15 +47,17 @@ int tableIndex;
 
 int refreshFrame = 300;
 
-PFont font;
+PFont bigFont;
+PFont smallFont;
+PFont titleFont;
 
 ArrayList<DiagramItem> items;
 
 public void setup () {
   
   // size(1920,800,P2D);
-  textMode(SHAPE);
-  // smooth();
+  textMode(MODEL);
+  
 
   Ani.init(this);
   Ani.setDefaultTimeMode(Ani.FRAMES);
@@ -76,11 +78,11 @@ public void setup () {
 
   maxR = (height/4) * .9f;
 
-  smallText = height/37;
-  bigText = height/20;
-
-  font = createFont("DINPro-Medium", smallText);
-  textFont(font);
+  //create font at high resolution so it sizes better
+  smallFont = createFont("DINPro-Medium", height/37);
+  bigFont = createFont("DINPro-Medium", height/20);
+  titleFont = createFont("DINPro-Medium", height/20);
+  textFont(bigFont);
 
   tableIndex = 0;
 
@@ -100,13 +102,14 @@ public void draw() {
     i.displayCircles();
   }
 
-  textAlign(LEFT, TOP);
-  textSize(height/10);
-
   String title = table.getColumnTitle(table.getColumnCount() - 1);
+  textAlign(LEFT, TOP);
+  textFont(titleFont);
   text(title, 20, -height/10, width, gridY);
 
   spout.sendTexture();
+  fill(255,0,0);
+  textSize(12);
   text(frameRate,10,10);
 }
 
@@ -230,11 +233,11 @@ class DiagramItem{
     textAlign(CENTER, CENTER);
 
     fill(0);
-    textSize(bigText);
+    textFont(bigFont);
     text(str(val), x, y, gridX, gridY);
 
     textAlign(CENTER, TOP);
-    textSize(smallText);
+    textFont(smallFont);
     text(strKey, x, y + gridY - height/30, gridX, gridY);
   }
 
@@ -255,7 +258,7 @@ class DiagramItem{
     Ani.to(this, dur, random(0, 12), "r", rad, Ani.ELASTIC_OUT);
   }
 }
-  public void settings() {  size(1280, 400,P2D); }
+  public void settings() {  size(1280, 400,P2D);  smooth(); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "circleDiagrams" };
     if (passedArgs != null) {

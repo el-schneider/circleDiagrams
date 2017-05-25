@@ -33,11 +33,11 @@ class DiagramItem{
     textAlign(CENTER, CENTER);
 
     fill(0);
-    textSize(bigText);
+    textFont(bigFont);
     text(str(val), x, y, gridX, gridY);
 
     textAlign(CENTER, TOP);
-    textSize(smallText);
+    textFont(smallFont);
     text(strKey, x, y + gridY - height/30, gridX, gridY);
   }
 
