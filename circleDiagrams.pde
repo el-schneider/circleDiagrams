@@ -1,18 +1,12 @@
 import de.looksgood.ani.*;
 import de.looksgood.ani.easing.*;
 import java.io.FilenameFilter;
+import spout.*;
 
-static final FilenameFilter CSV_FILTER = new FilenameFilter() {
-  final String[] EXTS = {
-    "csv"
-  };
-
-  @ Override final boolean accept(final File dir, String name) {
-    name = name.toLowerCase();
-    for (final String ext: EXTS)  if (name.endsWith(ext))  return true;
-    return false;
-  }
-};
+//spout object
+Spout spout;
+//spout senderName
+String sendername;
 
 int cols = 12;
 int rows = 4;
@@ -37,17 +31,24 @@ PFont font;
 ArrayList<DiagramItem> items;
 
 void setup () {
-  size(1280, 400);
-  //size(1920,800);
+  size(1280, 400,P2D);
+  // size(1920,800,P2D);
+  textMode(SHAPE);
+  smooth();
 
   Ani.init(this);
   Ani.setDefaultTimeMode(Ani.FRAMES);
 
-  // we'll have a look in the data folder
-  java.io.File folder = new java.io.File(dataPath(""));
+
+  spout = new Spout(this);
+  sendername = "circleDiagrams";
+  spout.createSender(sendername, width, height);
+
 
   // add all CSV-type files to the tables array
+  java.io.File folder = new java.io.File(dataPath(""));
   tables = folder.list(CSV_FILTER);
+
 
   gridX = 0.75*width/cols;
   gridY = height/rows;
@@ -83,6 +84,9 @@ void draw() {
 
   String title = table.getColumnTitle(table.getColumnCount() - 1);
   text(title, 20, -height/10, width, gridY);
+
+  spout.sendTexture();
+  text(frameRate,10,10);
 }
 
 void initTable(int tabI){
@@ -157,3 +161,16 @@ color red = #df4c37;
 color pink = #eb619a;
 color purple = #8e84b4;
 color[] colorPalette = { yellow, orange, red, pink, purple };
+
+
+static final FilenameFilter CSV_FILTER = new FilenameFilter() {
+  final String[] EXTS = {
+    "csv"
+  };
+
+  @ Override final boolean accept(final File dir, String name) {
+    name = name.toLowerCase();
+    for (final String ext: EXTS)  if (name.endsWith(ext))  return true;
+    return false;
+  }
+};

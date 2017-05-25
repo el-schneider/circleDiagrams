@@ -6,6 +6,7 @@ import processing.opengl.*;
 import de.looksgood.ani.*; 
 import de.looksgood.ani.easing.*; 
 import java.io.FilenameFilter; 
+import spout.*; 
 
 import java.util.HashMap; 
 import java.util.ArrayList; 
@@ -16,23 +17,17 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-public class pieDiagrams extends PApplet {
+public class circleDiagrams extends PApplet {
 
 
 
 
 
-static final FilenameFilter CSV_FILTER = new FilenameFilter() {
-  final String[] EXTS = {
-    "csv"
-  };
 
-  public @Override final boolean accept(final File dir, String name) {
-    name = name.toLowerCase();
-    for (final String ext: EXTS)  if (name.endsWith(ext))  return true;
-    return false;
-  }
-};
+//spout object
+Spout spout;
+//spout senderName
+String sendername;
 
 int cols = 12;
 int rows = 4;
@@ -58,16 +53,23 @@ ArrayList<DiagramItem> items;
 
 public void setup () {
   
-  //size(1920,800);
+  // size(1920,800,P2D);
+  textMode(SHAPE);
+  // smooth();
 
   Ani.init(this);
   Ani.setDefaultTimeMode(Ani.FRAMES);
 
-  // we'll have a look in the data folder
-  java.io.File folder = new java.io.File(dataPath(""));
+
+  spout = new Spout(this);
+  sendername = "circleDiagrams";
+  spout.createSender(sendername, width, height);
+
 
   // add all CSV-type files to the tables array
+  java.io.File folder = new java.io.File(dataPath(""));
   tables = folder.list(CSV_FILTER);
+
 
   gridX = 0.75f*width/cols;
   gridY = height/rows;
@@ -103,6 +105,9 @@ public void draw() {
 
   String title = table.getColumnTitle(table.getColumnCount() - 1);
   text(title, 20, -height/10, width, gridY);
+
+  spout.sendTexture();
+  text(frameRate,10,10);
 }
 
 public void initTable(int tabI){
@@ -177,6 +182,19 @@ int red = 0xffdf4c37;
 int pink = 0xffeb619a;
 int purple = 0xff8e84b4;
 int[] colorPalette = { yellow, orange, red, pink, purple };
+
+
+static final FilenameFilter CSV_FILTER = new FilenameFilter() {
+  final String[] EXTS = {
+    "csv"
+  };
+
+  public @Override final boolean accept(final File dir, String name) {
+    name = name.toLowerCase();
+    for (final String ext: EXTS)  if (name.endsWith(ext))  return true;
+    return false;
+  }
+};
 class DiagramItem{
   TableRow row;
 
@@ -237,9 +255,9 @@ class DiagramItem{
     Ani.to(this, dur, random(0, 12), "r", rad, Ani.ELASTIC_OUT);
   }
 }
-  public void settings() {  size(1280, 400); }
+  public void settings() {  size(1280, 400,P2D); }
   static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "pieDiagrams" };
+    String[] appletArgs = new String[] { "circleDiagrams" };
     if (passedArgs != null) {
       PApplet.main(concat(appletArgs, passedArgs));
     } else {
